@@ -1,19 +1,20 @@
-# EL05 ROS 2 Motor Control
+# EL05 ROS 2 电机控制
 
-ROS 2 Jazzy workspace for RobStride EL05 motors over a USB-CANHUB SocketCAN interface. Includes the motor protocol library, five-DOF controller, hardware test nodes, CAN setup script, and the EL05 manual.
+这是一个基于 ROS 2 Jazzy 的 RobStride EL05 电机控制工作区，通过 USB-CANHUB 的 SocketCAN 接口与电机通信。仓库包含电机协议库、五自由度控制器、单电机和五电机测试节点、CAN 初始化脚本及 EL05 参考手册。
 
-## Hardware
+## 硬件配置
 
-- EL05 motors with CAN IDs `1` to `5`
-- CAN master ID `253` (`0xFD`)
-- USB-CANHUB exposed as Linux `can0`
-- CAN bitrate: `1 Mbps`; positions are in radians
+- RobStride EL05，CAN ID 为 `1` 到 `5`
+- CAN 主站 ID：`253`（`0xFD`）
+- USB-CANHUB：Linux 接口 `can0`
+- CAN 波特率：`1 Mbps`
+- 位置单位：弧度（rad）
 
-All motors share `can0`. Verify wiring, mechanical clearance, direction, limits, and an accessible emergency stop before enabling hardware.
+五个电机共用 `can0`。启动硬件前，请确认接线、机械空间、运动方向、关节限位和急停装置均正常。
 
-## Build
+## 编译
 
-Requires ROS 2 Jazzy and `colcon`:
+需要安装 ROS 2 Jazzy 和 `colcon`：
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -22,49 +23,65 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-After reconnecting the USB-CANHUB:
+重新连接 USB-CANHUB 后，先初始化 CAN：
 
 ```bash
 ~/el05_serial_ws/scripts/setup_can0.sh
 ```
 
-## Hardware tests
+## 电机测试
 
-Single motor (ID 1), small motion:
+### 单电机测试（ID 1）
+
+以当前位置为中心进行小幅正弦运动：
 
 ```bash
-ros2 run rs_motor_ros2 el05_joint1_sine --confirm-hardware --duration 10 \
+ros2 run rs_motor_ros2 el05_joint1_sine \
+  --confirm-hardware --duration 10 \
   --amplitude 0.005 --frequency 0.1 --speed 0.1
 ```
 
-Five motors, each centered on its measured current position:
+### 五电机测试
+
+每个电机以自己的实时位置为中心：
 
 ```bash
-ros2 run rs_motor_ros2 el05_all_sine --confirm-hardware --duration 60 \
+ros2 run rs_motor_ros2 el05_all_sine \
+  --confirm-hardware --duration 60 \
   --amplitude 0.02 --frequency 0.1 --speed 0.1
 ```
 
-Large amplitudes up to 30 degrees require a second explicit confirmation. Simultaneous five-motor test at ±30 degrees:
+### ±30°大幅运动
+
+幅度超过 `0.05 rad` 时，必须增加 `--confirm-large-motion`。以下命令让五个电机同时进行 ±30°运动：
 
 ```bash
-ros2 run rs_motor_ros2 el05_all_sine --confirm-hardware --confirm-large-motion \
-  --duration 60 --amplitude 0.523599 --frequency 0.05 --speed 0.2
+ros2 run rs_motor_ros2 el05_all_sine \
+  --confirm-hardware --confirm-large-motion \
+  --duration 60 --amplitude 0.523599 \
+  --frequency 0.05 --speed 0.2
 ```
 
-Leave a motor stationary with `--skip-id`; this example moves IDs 1, 3, 4, and 5:
+`0.523599 rad` 表示以当前位置为中心的正负 30°。如果需要总行程 30°，请使用 `0.261799`。
+
+### 跳过指定电机
+
+使用 `--skip-id` 可让指定 ID 保持不动。例如跳过 2 号电机：
 
 ```bash
-ros2 run rs_motor_ros2 el05_all_sine --confirm-hardware --confirm-large-motion \
-  --skip-id 2 --duration 60 --amplitude 0.523599 --frequency 0.05 --speed 0.2
+ros2 run rs_motor_ros2 el05_all_sine \
+  --confirm-hardware --confirm-large-motion --skip-id 2 \
+  --duration 60 --amplitude 0.523599 \
+  --frequency 0.05 --speed 0.2
 ```
 
-Press `Ctrl+C` to stop. The nodes disable every motor they created on normal exit, interruption, or control errors. `0.523599` rad means ±30 degrees around the measured center; use `0.261799` for a 30-degree total stroke.
+按 `Ctrl+C` 可停止。程序在正常退出、中断或控制异常时，会对已创建的电机发送停止和失能命令。
 
-## Package layout
+## 目录结构
 
-- `src/robstride_ros_sample`: `rs_motor_ros2` C++ package and motor protocol
-- `src/el05_serial_tools`: optional serial monitor utility
-- `scripts/setup_can0.sh`: SocketCAN initialization
-- `docs/EL05使用说明书2600428.pdf`: hardware reference manual
+- `src/robstride_ros_sample`：`rs_motor_ros2` C++ 包和电机协议实现
+- `src/el05_serial_tools`：可选的串口监听工具
+- `scripts/setup_can0.sh`：SocketCAN 初始化脚本
+- `docs/EL05使用说明书2600428.pdf`：EL05 硬件参考手册
 
-Generated `build/`, `install/`, and `log/` directories are excluded from version control.
+`build/`、`install/` 和 `log/` 是本地生成目录，已通过 `.gitignore` 排除，不会提交到仓库。
