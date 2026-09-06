@@ -24,7 +24,8 @@ public:
     // All five EL05 motors share one physical CAN bus exposed as can0.
     interfaces_ = {"can0", "can0", "can0", "can0", "can0"};
     motor_ids_ = {1, 2, 3, 4, 5};
-    offsets_ = {0.0, 4.244908, 1.224117, 0.0, 0.0};
+    // Mechanical offsets for CAN IDs 1~5, in radians.
+    offsets_ = {0.0, 0.265762, 0.0, 4.244908, 0.0};
     directions_ = {1.0, 1.0, 1.0, 1.0, 1.0};
     gear_ratios_ = {1.0, 1.0, 1.0, 1.0, 1.0};
     lower_ = {-3.14, -0.720, -0.890, -3.14, -1.255};
