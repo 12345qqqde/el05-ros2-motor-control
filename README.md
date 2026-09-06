@@ -61,18 +61,18 @@ ros2 run rs_motor_ros2 el05_all_sine \
   --amplitude 0.02 --frequency 0.1 --speed 0.1
 ```
 
-### ±30°大幅运动
+### ±40°大幅运动
 
-幅度超过 `0.05 rad` 时，必须增加 `--confirm-large-motion`。以下命令让五个电机同时进行 ±30°运动：
+幅度超过 `0.05 rad` 时，必须增加 `--confirm-large-motion`。以下命令让五个电机同时进行 ±40°运动：
 
 ```bash
 ros2 run rs_motor_ros2 el05_all_sine \
   --confirm-hardware --confirm-large-motion \
-  --duration 60 --amplitude 0.523599 \
+  --duration 60 --amplitude 0.698132 \
   --frequency 0.05 --speed 0.2
 ```
 
-`0.523599 rad` 表示以当前位置为中心的正负 30°。如果需要总行程 30°，请使用 `0.261799`。
+`0.698132 rad` 表示以当前位置为中心的正负 40°。如果需要总行程 40°，请使用 `0.349066`。
 
 ### 跳过指定电机
 
@@ -81,7 +81,7 @@ ros2 run rs_motor_ros2 el05_all_sine \
 ```bash
 ros2 run rs_motor_ros2 el05_all_sine \
   --confirm-hardware --confirm-large-motion --skip-id 2 \
-  --duration 60 --amplitude 0.523599 \
+  --duration 60 --amplitude 0.698132 \
   --frequency 0.05 --speed 0.2
 ```
 
