@@ -83,6 +83,15 @@ ros2 run rs_motor_ros2 el05_all_sine \
   --frequency 0.05 --speed 0.2
 ```
 
+`--speed-id2` 可单独设置 2 号电机速度，单位为 `rad/s`；50 rpm 等于 `5.235988 rad/s`。例如五个电机均 ±30°，2 号电机速度上限为 50 rpm：
+
+```bash
+ros2 run rs_motor_ros2 el05_all_sine \
+  --confirm-hardware --confirm-large-motion --hold-enabled \
+  --duration 60 --amplitude 0.523599 --frequency 0.05 \
+  --speed 0.2 --speed-id2 5.235988
+```
+
 ### 跳过指定电机
 
 使用 `--skip-id` 可让指定 ID 保持不动。例如跳过 2 号电机：
