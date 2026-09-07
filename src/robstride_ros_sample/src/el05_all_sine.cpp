@@ -30,7 +30,7 @@ int main(int argc,char **argv){
     }
     else {std::cerr<<"Usage: el05_all_sine --confirm-hardware [--confirm-large-motion] [--hold-enabled] [--monitor-id2-current] [--skip-id N] [--duration s] [--amplitude rad] [--amplitude-id2 rad] [--frequency Hz] [--speed rad/s] [--speed-id2 rad/s]\n"; return 2;}}
   constexpr double normal_max_amplitude = .05;
-  constexpr double large_motion_max_amplitude = .698132; // 40 degrees
+  constexpr double large_motion_max_amplitude = .872665; // 50 degrees
   if(amp > normal_max_amplitude && !large_motion_confirmed){
     std::cerr<<"Large amplitude requires --confirm-large-motion after checking clearance and emergency stop.\n";
     return 2;

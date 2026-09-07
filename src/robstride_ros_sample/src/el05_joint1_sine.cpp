@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     return 2;
   }
   constexpr double normal_max_amplitude = 0.05;
-  constexpr double large_motion_max_amplitude = 0.698132;  // 40 degrees
+  constexpr double large_motion_max_amplitude = 0.872665;  // 50 degrees
   if (amplitude > normal_max_amplitude && !large_motion_confirmed) {
     std::cerr << "Large amplitude requires --confirm-large-motion after checking clearance and emergency stop.\n";
     return 2;
