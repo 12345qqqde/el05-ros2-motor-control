@@ -74,6 +74,15 @@ ros2 run rs_motor_ros2 el05_all_sine \
 
 `0.698132 rad` 表示以当前位置为中心的正负 40°。如果需要总行程 40°，请使用 `0.349066`。
 
+五电机也支持单独设置 2 号电机幅度。例如让 1、3、4、5 号为 40°，2 号为 20°：
+
+```bash
+ros2 run rs_motor_ros2 el05_all_sine \
+  --confirm-hardware --confirm-large-motion --hold-enabled \
+  --duration 60 --amplitude 0.698132 --amplitude-id2 0.349066 \
+  --frequency 0.05 --speed 0.2
+```
+
 ### 跳过指定电机
 
 使用 `--skip-id` 可让指定 ID 保持不动。例如跳过 2 号电机：
