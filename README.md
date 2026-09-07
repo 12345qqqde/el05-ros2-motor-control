@@ -92,6 +92,16 @@ ros2 run rs_motor_ros2 el05_all_sine \
   --speed 0.2 --speed-id2 5.235988
 ```
 
+2 号电机的极限测试（±90°）需要额外的 `--confirm-extreme-motion`。例如其他电机 ±30°、2 号电机 ±90°，并降低 2 号速度：
+
+```bash
+ros2 run rs_motor_ros2 el05_all_sine \
+  --confirm-hardware --confirm-large-motion --confirm-extreme-motion \
+  --monitor-id2-current --hold-enabled --duration 60 \
+  --amplitude 0.523599 --amplitude-id2 1.570796 \
+  --frequency 0.02 --speed 0.2 --speed-id2 0.05
+```
+
 ### 跳过指定电机
 
 使用 `--skip-id` 可让指定 ID 保持不动。例如跳过 2 号电机：

@@ -10,11 +10,12 @@
 #include <thread>
 namespace { std::atomic_bool stop{false}; void sig(int){stop=true;} }
 int main(int argc,char **argv){
-  bool ok=false, large_motion_confirmed=false, hold_enabled=false, monitor_id2_current=false; double duration=60, amp=.02, amp_id2=-1.0, freq=.1, speed=.1, speed_id2=-1.0;
+  bool ok=false, large_motion_confirmed=false, extreme_motion_confirmed=false, hold_enabled=false, monitor_id2_current=false; double duration=60, amp=.02, amp_id2=-1.0, freq=.1, speed=.1, speed_id2=-1.0;
   std::array<bool,5> active{}; active.fill(true);
   for(int i=1;i<argc;i++){std::string a=argv[i];
     if(a=="--confirm-hardware") ok=true;
     else if(a=="--confirm-large-motion") large_motion_confirmed=true;
+    else if(a=="--confirm-extreme-motion") extreme_motion_confirmed=true;
     else if(a=="--hold-enabled") hold_enabled=true;
     else if(a=="--monitor-id2-current") monitor_id2_current=true;
     else if(i+1<argc && a=="--duration") duration=std::stod(argv[++i]);
@@ -28,14 +29,19 @@ int main(int argc,char **argv){
       if(id<1 || id>5){std::cerr<<"--skip-id must be between 1 and 5.\n"; return 2;}
       active[(size_t)(id-1)]=false;
     }
-    else {std::cerr<<"Usage: el05_all_sine --confirm-hardware [--confirm-large-motion] [--hold-enabled] [--monitor-id2-current] [--skip-id N] [--duration s] [--amplitude rad] [--amplitude-id2 rad] [--frequency Hz] [--speed rad/s] [--speed-id2 rad/s]\n"; return 2;}}
+    else {std::cerr<<"Usage: el05_all_sine --confirm-hardware [--confirm-large-motion] [--confirm-extreme-motion] [--hold-enabled] [--monitor-id2-current] [--skip-id N] [--duration s] [--amplitude rad] [--amplitude-id2 rad] [--frequency Hz] [--speed rad/s] [--speed-id2 rad/s]\n"; return 2;}}
   constexpr double normal_max_amplitude = .05;
   constexpr double large_motion_max_amplitude = .872665; // 50 degrees
+  constexpr double extreme_motion_max_amplitude = 1.570796; // 90 degrees
+  if (amp_id2 > large_motion_max_amplitude && !extreme_motion_confirmed) {
+    std::cerr << "Amplitudes above 50 degrees require --confirm-extreme-motion.\n";
+    return 2;
+  }
   if(amp > normal_max_amplitude && !large_motion_confirmed){
     std::cerr<<"Large amplitude requires --confirm-large-motion after checking clearance and emergency stop.\n";
     return 2;
   }
-  const double max_amp = large_motion_confirmed ? large_motion_max_amplitude : normal_max_amplitude;
+  const double max_amp = extreme_motion_confirmed ? extreme_motion_max_amplitude : (large_motion_confirmed ? large_motion_max_amplitude : normal_max_amplitude);
   if (amp_id2 < 0.0) amp_id2 = amp;
   constexpr double normal_max_speed = .2;
   constexpr double large_motion_max_speed = 5.235988; // 50 rpm
