@@ -115,6 +115,16 @@ ros2 run rs_motor_ros2 el05_joint2_current_monitor --duration 60 --rate 10
 
 请不要在位置控制节点运行时同时启动该监听器，以免多个程序接收同一条 CAN 回包。
 
+如果需要在五电机运动时同步监听 2 号电机电流，直接给运动节点增加同进程监听开关：
+
+```bash
+ros2 run rs_motor_ros2 el05_all_sine \
+  --confirm-hardware --monitor-id2-current \
+  --duration 60 --amplitude 0.02 --frequency 0.05 --speed 0.1
+```
+
+终端会每约 0.1 秒输出一次 `motor2 iqf`（单位 A）。
+
 如果需要运动结束后仍保持电机上电，可增加 `--hold-enabled`。轨迹完成后程序会持续发送当前位置，电机保持使能但不再运动；按 `Ctrl+C` 才会失能：
 
 ```bash

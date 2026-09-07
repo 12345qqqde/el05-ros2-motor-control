@@ -10,12 +10,13 @@
 #include <thread>
 namespace { std::atomic_bool stop{false}; void sig(int){stop=true;} }
 int main(int argc,char **argv){
-  bool ok=false, large_motion_confirmed=false, hold_enabled=false; double duration=60, amp=.02, amp_id2=-1.0, freq=.1, speed=.1, speed_id2=-1.0;
+  bool ok=false, large_motion_confirmed=false, hold_enabled=false, monitor_id2_current=false; double duration=60, amp=.02, amp_id2=-1.0, freq=.1, speed=.1, speed_id2=-1.0;
   std::array<bool,5> active{}; active.fill(true);
   for(int i=1;i<argc;i++){std::string a=argv[i];
     if(a=="--confirm-hardware") ok=true;
     else if(a=="--confirm-large-motion") large_motion_confirmed=true;
     else if(a=="--hold-enabled") hold_enabled=true;
+    else if(a=="--monitor-id2-current") monitor_id2_current=true;
     else if(i+1<argc && a=="--duration") duration=std::stod(argv[++i]);
     else if(i+1<argc && a=="--amplitude") amp=std::stod(argv[++i]);
     else if(i+1<argc && a=="--amplitude-id2") amp_id2=std::stod(argv[++i]);
@@ -27,7 +28,7 @@ int main(int argc,char **argv){
       if(id<1 || id>5){std::cerr<<"--skip-id must be between 1 and 5.\n"; return 2;}
       active[(size_t)(id-1)]=false;
     }
-    else {std::cerr<<"Usage: el05_all_sine --confirm-hardware [--confirm-large-motion] [--hold-enabled] [--skip-id N] [--duration s] [--amplitude rad] [--amplitude-id2 rad] [--frequency Hz] [--speed rad/s] [--speed-id2 rad/s]\n"; return 2;}}
+    else {std::cerr<<"Usage: el05_all_sine --confirm-hardware [--confirm-large-motion] [--hold-enabled] [--monitor-id2-current] [--skip-id N] [--duration s] [--amplitude rad] [--amplitude-id2 rad] [--frequency Hz] [--speed rad/s] [--speed-id2 rad/s]\n"; return 2;}}
   constexpr double normal_max_amplitude = .05;
   constexpr double large_motion_max_amplitude = .698132; // 40 degrees
   if(amp > normal_max_amplitude && !large_motion_confirmed){
@@ -46,15 +47,17 @@ int main(int argc,char **argv){
   }
   std::signal(SIGINT,sig); std::signal(SIGTERM,sig);
   std::array<std::unique_ptr<RobStrideMotor>,5> m; std::array<double,5> c{};
+  if (monitor_id2_current && !active[1]) { std::cerr << "Cannot monitor skipped motor ID 2.\n"; return 2; }
   try { for(int i=0;i<5;i++){if(!active[i]) continue; m[i]=std::make_unique<RobStrideMotor>("can0",0xFD,(uint8_t)(i+1),0); m[i]->Get_RobStrite_Motor_parameter(0x7019); c[i]=m[i]->drw.mechPos.data; if(!std::isfinite(c[i])) throw std::runtime_error("invalid position feedback");}
     std::cout<<"Selected motors ready; skipped IDs:"; for(int i=0;i<5;i++) if(!active[i]) std::cout<<" "<<(i+1); std::cout<<"; amplitude="<<amp<<" rad; id2 amplitude="<<amp_id2<<" rad; speed="<<speed<<" rad/s; id2 speed="<<speed_id2<<" rad/s; duration="<<duration<<" s\n";
-    auto start=std::chrono::steady_clock::now();
-    while(!stop){double t=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count(); if(t>=duration)break; for(int i=0;i<5;i++) if(active[i]) { const double a = (i == 1) ? amp_id2 : amp; const double v = (i == 1) ? speed_id2 : speed; const double q=a*std::sin(2*M_PI*freq*t); m[i]->RobStrite_Motor_PosCSP_control((float)v,(float)(c[i]+q)); } std::this_thread::sleep_for(std::chrono::milliseconds(20));}
+    auto start=std::chrono::steady_clock::now(); int cycle = 0;
+    while(!stop){double t=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count(); if(t>=duration)break; for(int i=0;i<5;i++) if(active[i]) { const double a = (i == 1) ? amp_id2 : amp; const double v = (i == 1) ? speed_id2 : speed; const double q=a*std::sin(2*M_PI*freq*t); m[i]->RobStrite_Motor_PosCSP_control((float)v,(float)(c[i]+q)); } if (monitor_id2_current && (++cycle % 5 == 0)) { m[1]->Get_RobStrite_Motor_parameter(0x701A); std::cout << "motor2 iqf: " << m[1]->drw.iqf.data << " A\n"; } std::this_thread::sleep_for(std::chrono::milliseconds(20));}
     if (hold_enabled && !stop) {
       std::cout << "Motion complete; motors remain enabled at their centers. Press Ctrl+C to disable.\n";
       while (!stop) {
         for (int i=0;i<5;i++) if(active[i])
           m[i]->RobStrite_Motor_PosCSP_control((float)((i == 1) ? speed_id2 : speed), (float)c[i]);
+        if (monitor_id2_current && (++cycle % 5 == 0)) { m[1]->Get_RobStrite_Motor_parameter(0x701A); std::cout << "motor2 iqf: " << m[1]->drw.iqf.data << " A\n"; }
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
       }
     }
