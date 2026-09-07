@@ -87,6 +87,14 @@ ros2 run rs_motor_ros2 el05_all_sine \
 
 按 `Ctrl+C` 可停止。程序在正常退出、中断或控制异常时，会对已创建的电机发送停止和失能命令。
 
+如果需要运动结束后仍保持电机上电，可增加 `--hold-enabled`。轨迹完成后程序会持续发送当前位置，电机保持使能但不再运动；按 `Ctrl+C` 才会失能：
+
+```bash
+ros2 run rs_motor_ros2 el05_all_sine \
+  --confirm-hardware --hold-enabled --duration 10 \
+  --amplitude 0.02 --frequency 0.1 --speed 0.1
+```
+
 ## 目录结构
 
 - `src/robstride_ros_sample`：`rs_motor_ros2` C++ 包和电机协议实现

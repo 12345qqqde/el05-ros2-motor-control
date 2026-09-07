@@ -17,6 +17,7 @@ void on_signal(int) { interrupted = true; }
 int main(int argc, char **argv) {
   bool confirmed = false;
   bool large_motion_confirmed = false;
+  bool hold_enabled = false;
   double duration = 10.0;
   double amplitude = 0.005;
   double frequency = 0.1;
@@ -27,6 +28,8 @@ int main(int argc, char **argv) {
       confirmed = true;
     } else if (arg == "--confirm-large-motion") {
       large_motion_confirmed = true;
+    } else if (arg == "--hold-enabled") {
+      hold_enabled = true;
     } else if (arg == "--duration" && i + 1 < argc) {
       duration = std::stod(argv[++i]);
     } else if (arg == "--amplitude" && i + 1 < argc) {
@@ -36,7 +39,7 @@ int main(int argc, char **argv) {
     } else if (arg == "--speed" && i + 1 < argc) {
       speed_limit = std::stod(argv[++i]);
     } else {
-      std::cerr << "Usage: el05_joint1_sine --confirm-hardware [--confirm-large-motion]\n"
+      std::cerr << "Usage: el05_joint1_sine --confirm-hardware [--confirm-large-motion] [--hold-enabled]\n"
                 << "  [--duration seconds] [--amplitude rad] [--frequency Hz] [--speed rad/s]\n";
       return 2;
     }
@@ -84,6 +87,13 @@ int main(int argc, char **argv) {
       const double target = center + amplitude * std::sin(2.0 * M_PI * frequency * t);
       motor.RobStrite_Motor_PosCSP_control(speed_limit, target);
       std::this_thread::sleep_for(std::chrono::duration<double>(period));
+    }
+    if (hold_enabled && !interrupted) {
+      std::cout << "Motion complete; motor remains enabled at its center. Press Ctrl+C to disable.\n";
+      while (!interrupted) {
+        motor.RobStrite_Motor_PosCSP_control((float)speed_limit, (float)center);
+        std::this_thread::sleep_for(std::chrono::duration<double>(period));
+      }
     }
     motor.Disenable_Motor(0);
     std::cout << "Motor stopped.\n";
