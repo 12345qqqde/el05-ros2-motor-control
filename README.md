@@ -105,6 +105,16 @@ ros2 run rs_motor_ros2 el05_all_sine \
 
 按 `Ctrl+C` 可停止。程序在正常退出、中断或控制异常时，会对已创建的电机发送停止和失能命令。
 
+### 监听 2 号电机电流
+
+以下节点只读取 CAN ID 2 的 `0x701A iqf`，即滤波 q 轴电流（A）；不会使能、运动或停止电机：
+
+```bash
+ros2 run rs_motor_ros2 el05_joint2_current_monitor --duration 60 --rate 10
+```
+
+请不要在位置控制节点运行时同时启动该监听器，以免多个程序接收同一条 CAN 回包。
+
 如果需要运动结束后仍保持电机上电，可增加 `--hold-enabled`。轨迹完成后程序会持续发送当前位置，电机保持使能但不再运动；按 `Ctrl+C` 才会失能：
 
 ```bash
